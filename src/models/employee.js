@@ -38,6 +38,7 @@ module.exports = (sequelize, DataTypes) => {
         }, {
             defaultScope: {
                 include: { model: Company },
+                attributes: { exclude: ['CompanyId'] },
             },
         });
 

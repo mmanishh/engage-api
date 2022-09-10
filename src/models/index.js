@@ -3,3 +3,4 @@ const sequelizeInstance = require('./database');
 
 exports.User = require('./user')(sequelizeInstance, Sequelize);
 exports.Company = require('./company')(sequelizeInstance, Sequelize);
+exports.Employee = require('./employee')(sequelizeInstance, Sequelize);
