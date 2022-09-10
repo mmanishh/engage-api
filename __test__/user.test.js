@@ -9,7 +9,7 @@ const {
 } = require('@jest/globals');
 const app = require('../src/app');
 const {
-    NO_TOKEN_PROVIDED, NO_USER_FOUND, DATA_DOES_NOT_EXIST, USER_NOT_EXIST,
+    NO_TOKEN_PROVIDED, NO_USER_FOUND, DATA_DOES_NOT_EXIST, USER_NOT_EXIST, INVALID_UNAME_PWORD,
 } = require('../src/helpers/messages');
 const { userDummy, tokenExpired, tokenInvalid } = require('./data/userData');
 
@@ -129,6 +129,15 @@ describe('user', () => {
         done();
     });
 
+    test('login user with wrong credentials', async (done) => {
+        const res = await request(app)
+            .post('/api/v1/auth/login')
+            .send({ email: 'manish@gmail.com', password: 'somepassword' });
+        expect(res.statusCode).toBe(401);
+        expect(res.body.message).toBe(INVALID_UNAME_PWORD);
+        done();
+    });
+
     test('get logged in user', async (done) => {
         const res = await request(app)
             .get('/api/v1/auth/profile')
@@ -206,7 +215,7 @@ describe('user', () => {
                 name: 'Manish New',
                 email: 'manish@gmail.com',
                 role: 'user',
-                password: 'hello@123',
+                password: 'password@123',
                 status: true,
             })
             .set('authorization', authorizationToken);

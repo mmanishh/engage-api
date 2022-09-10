@@ -38,20 +38,16 @@ module.exports = (sequelize, DataTypes) => {
         {
             hooks: {
                 beforeCreate(user) {
-                    if (user.changed('password')) {
-                        user.password = crypto
-                            .createHash('md5')
-                            .update(user.password || '')
-                            .digest('hex');
-                    }
+                    user.password = crypto
+                        .createHash('md5')
+                        .update(user.password)
+                        .digest('hex');
                 },
                 beforeUpdate(user) {
-                    if (user.changed('password')) {
-                        user.password = crypto
-                            .createHash('md5')
-                            .update(user.password || '')
-                            .digest('hex');
-                    }
+                    user.password = crypto
+                        .createHash('md5')
+                        .update(user.password)
+                        .digest('hex');
                 },
             },
         },
