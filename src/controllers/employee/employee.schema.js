@@ -4,8 +4,8 @@ exports.create = {
     body: Joi.object().keys({
         firstName: Joi.string().required(),
         lastName: Joi.string().required(),
-        email: Joi.string().email().required(),
-        phone: Joi.string().required(),
+        email: Joi.string().email(),
+        phone: Joi.string(),
         company: Joi.object(),
     }),
 };
