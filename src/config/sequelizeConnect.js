@@ -1,14 +1,22 @@
+require('dotenv').config();
 const sequelize = require('../models/database');
+const config = require('./config');
 const { DB_CONNECTION_SUCCESSFUL, DB_CONNECTION_UNSUCCESSFUL } = require('../helpers/messages');
+
+const dbConfig = config[process.env.NODE_ENV || 'development'];
 
 exports.dbConnect = async () => {
     sequelize.authenticate().then(() => {
-        console.info(DB_CONNECTION_SUCCESSFUL);
+        console.log(`${DB_CONNECTION_SUCCESSFUL} uri: ${dbConfig.host}:${dbConfig.port}`);
     }).catch((err) => {
-        console.error(DB_CONNECTION_UNSUCCESSFUL, err.message);
+        console.log(DB_CONNECTION_UNSUCCESSFUL, err.message);
     });
 };
 
 exports.dbDisconnect = async () => {
-    await sequelize.close();
+    await sequelize.close().then(() => {
+        console.log('DB conn closed');
+    }).catch((err) => {
+        console.log(err.message);
+    });
 };
