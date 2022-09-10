@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:12.5
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    ports: 
+      - "${DB_PORT}:5432"
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    networks:
+      - engage_network
+
+  engage_api:
+    build:
+      context: .
+    container_name: engage_api
+    environment:
+      DB_HOST: 'postgres_db'
+      DB_DATABASE: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_PORT: ${DB_PORT}
+    depends_on:
+      - postgres
+    ports:
+      - '7000:7000'
+    networks:
+      - engage_network
+        
+networks:
+  engage_network:
+    driver: bridge

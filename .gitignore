@@ -4,3 +4,4 @@ package-lock.json
 logs
 coverage
 .DS_Store
+db-data
