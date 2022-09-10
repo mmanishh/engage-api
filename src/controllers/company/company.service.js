@@ -1,7 +1,7 @@
 /* eslint-disable no-return-await */
 const { Company } = require('../../models');
 
-exports.create = async (payload) => await Company.create(payload);
+exports.create = async (payload, txn = null) => await Company.create(payload, { transaction: txn });
 
 exports.findOne = async (query) => await Company.findOne({ where: query });
 
