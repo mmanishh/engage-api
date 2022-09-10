@@ -5,13 +5,14 @@ const request = require('supertest');
 const {
     expect,
     describe,
-    beforeEach,
+    afterAll,
 } = require('@jest/globals');
 const app = require('../src/app');
 const {
     NO_TOKEN_PROVIDED, NO_USER_FOUND, DATA_DOES_NOT_EXIST, USER_NOT_EXIST, INVALID_UNAME_PWORD,
 } = require('../src/helpers/messages');
 const { userDummy, tokenExpired, tokenInvalid } = require('./data/userData');
+const { mockUsersData } = require('./data/mockUserData');
 
 // Mock the overall database layer (connection etc..)
 jest.mock('sequelize', () => require('./_mocks/sequelize'));
@@ -78,7 +79,7 @@ jest.mock('../src/models/user', () => () => {
 let authorizationToken;
 const userId = '17ecdb90-dc9b-4b68-b8fb-ca4f7545ebc0';
 
-beforeEach(async () => {
+afterAll(async () => {
     jest.clearAllMocks();
 });
 
@@ -177,16 +178,19 @@ describe('user', () => {
     /* users endpoints  start */
     test('get all users', async (done) => {
         const res = await request(app)
-            .get('/api/v1/users');
+            .get('/api/v1/users')
+            .set('authorization', authorizationToken);
         expect(res.statusCode).toBe(200);
-        expect(res.body.data.length).toEqual(3);
+        expect(res.body.data.length).toBe(3);
         done();
     });
 
     test('get user by id', async (done) => {
         const res = await request(app)
-            .get(`/api/v1/users/${userId}`);
+            .get(`/api/v1/users/${userId}`)
+            .set('authorization', authorizationToken);
         expect(res.statusCode).toBe(200);
+        expect(res.body.data).toEqual(mockUsersData[0]);
         done();
     });
 

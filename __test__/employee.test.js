@@ -6,11 +6,13 @@ const {
     expect,
     describe,
     afterAll,
+    beforeAll,
 } = require('@jest/globals');
 const app = require('../src/app');
 const {
     DATA_DOES_NOT_EXIST,
 } = require('../src/helpers/messages');
+const { mockEmployeesData } = require('./data/mockUserData');
 const { employeeDummy, employeeId } = require('./data/employeeData');
 const { tokenValid } = require('./data/userData');
 
@@ -75,6 +77,33 @@ jest.mock('../src/models/employee', () => () => {
     return employeeMock;
 });
 
+// TODO : refactor in seperate file
+jest.mock('../src/models/user', () => () => {
+    const SequelizeMock = require('sequelize-mock');
+
+    const dbMock = new SequelizeMock();
+    const userMockModel = dbMock.define('user');
+
+    const { mockUsersData } = require('./data/mockUserData');
+
+    const userTestObject = userMockModel.build(mockUsersData[0]);
+
+    const testModelInstances = [
+        userTestObject,
+        userMockModel.build(mockUsersData[1]),
+    ];
+
+    // Mock model method overrides for tests below
+    userMockModel.findAll = () => Promise.resolve(testModelInstances);
+    userMockModel.findByPk = (id) => {
+        const user = mockUsersData.find((e) => e.id === id);
+        if (!user) return;
+        return Promise.resolve(userMockModel.build(user));
+    };
+
+    return userMockModel;
+});
+
 const ENDPOINT = '/api/v1/employees';
 
 describe('employee', () => {
@@ -92,7 +121,7 @@ describe('employee', () => {
             .get(ENDPOINT)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(200);
-        expect(res.body.data.length).toEqual(3);
+        expect(res.body.data.length).toBe(3);
         done();
     });
 
@@ -101,6 +130,7 @@ describe('employee', () => {
             .get(`${ENDPOINT}/${employeeId}`)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(200);
+        expect(res.body.data).toEqual(mockEmployeesData[0]);
         done();
     });
 

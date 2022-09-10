@@ -8,8 +8,8 @@ exports.mockUsersData = [
         role: 'user',
         password: crypto.createHash('md5').update('hello@123').digest('hex'),
         status: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: '2022-09-10T11:54:47.101Z',
+        updatedAt: '2022-09-10T11:54:47.101Z',
     },
 ];
 

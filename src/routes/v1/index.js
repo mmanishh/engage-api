@@ -10,8 +10,8 @@ const router = express.Router();
 const authentication = require('../../middleware/authentication');
 
 router.use('/auth', authRoutes);
-router.use('/users', userRoutes);
-router.use('/employees', employeeRoutes);
-router.use('/companies', companyRoutes);
+router.use('/users', authentication, userRoutes);
+router.use('/employees', authentication, employeeRoutes);
+router.use('/companies', authentication, companyRoutes);
 
 module.exports = router;
