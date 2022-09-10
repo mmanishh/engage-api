@@ -4,10 +4,22 @@ const {
     describe,
     test,
     afterAll,
+    beforeAll,
 } = require('@jest/globals');
 
-const conn = require('../src/config/sequelize-connect');
+const conn = require('../src/config/sequelizeConnect');
 const app = require('../src/app');
+
+// check db connection
+beforeAll(async (done) => {
+    try {
+        await conn.dbConnect();
+        done();
+    } catch (error) {
+        console.error(error);
+        process.exit(1);
+    }
+});
 
 describe('index', () => {
     test('get the root path', async (done) => {
@@ -32,9 +44,10 @@ describe('index', () => {
     });
 });
 
-afterAll(async () => {
+afterAll(async (done) => {
     try {
         await conn.dbDisconnect();
+        done();
     } catch (error) {
         console.error(error);
         process.exit(1);

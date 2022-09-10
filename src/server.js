@@ -3,7 +3,7 @@ require('dotenv').config();
 const http = require('http');
 const chalk = require('chalk');
 
-const conn = require('./config/sequelize-connect');
+const conn = require('./config/sequelizeConnect');
 
 conn.dbConnect();
 
