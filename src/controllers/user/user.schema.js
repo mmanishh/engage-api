@@ -1,4 +1,5 @@
 const Joi = require('@hapi/joi');
+const { ROLE_USER, ROLE_ADMIN} = require('../../config/roles')
 
 exports.login = {
     body: Joi.object().keys({
@@ -11,7 +12,7 @@ exports.register = {
     body: Joi.object().keys({
         name: Joi.string().required(),
         email: Joi.string().email().required(),
-        role: Joi.string().required(),
+        role: Joi.string().valid(ROLE_USER, ROLE_ADMIN).required(),
         password: Joi.string().required(),
         status: Joi.boolean(),
     }),

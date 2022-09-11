@@ -10,19 +10,22 @@ module.exports = {
 
             firstName: {
                 type: Sequelize.STRING,
+                allowNull: false,
             },
 
             lastName: {
                 type: Sequelize.STRING,
+                allowNull: false,
             },
 
             email: {
                 type: Sequelize.STRING,
-                unique: true,
+                allowNull: true,
             },
 
             phone: {
                 type: Sequelize.STRING,
+                allowNull: true,
             },
 
             CompanyId: {

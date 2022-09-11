@@ -6,7 +6,7 @@ module.exports = {
         {
             id: uuid.v4(),
             name: 'Manish Maharjan',
-            email: 'mmaharjann@gmail.com',
+            email: 'manish@gmail.com',
             role: 'user',
             password: crypto.createHash('md5').update('hello@123').digest('hex'),
             status: true,

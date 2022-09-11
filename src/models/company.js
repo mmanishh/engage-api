@@ -13,10 +13,12 @@ module.exports = (sequelize, DataTypes) => {
 
             phone: {
                 type: DataTypes.STRING,
+                allowNull: true,
             },
 
             website: {
                 type: DataTypes.STRING,
+                allowNull: true,
             },
 
         });

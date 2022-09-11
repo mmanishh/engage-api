@@ -14,15 +14,17 @@ module.exports = {
 
             email: {
                 type: Sequelize.STRING,
-                unique: true,
+                allowNull: true,
             },
 
             phone: {
                 type: Sequelize.STRING,
+                allowNull: true,
             },
 
             website: {
                 type: Sequelize.STRING,
+                allowNull: true,
             },
 
             createdAt: {
