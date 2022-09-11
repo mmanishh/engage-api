@@ -9,20 +9,6 @@ module.exports = {
                     auth_token: [],
                 },
             ],
-            parameters: [
-                {
-                    $ref: '#/components/parameters/page',
-                },
-                {
-                    $ref: '#/components/parameters/pageSize',
-                },
-                {
-                    $ref: '#/components/parameters/filtered',
-                },
-                {
-                    $ref: '#/components/parameters/sorted',
-                },
-            ],
             responses: {
                 200: {
                     description: 'Get All User',

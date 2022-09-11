@@ -29,6 +29,12 @@ module.exports = {
                                 'password',
                                 'role',
                             ],
+                            example: {
+                                name: 'Manish Maharjan',
+                                email: 'manish2@gmail.com',
+                                password: 'hello@123',
+                                role: 'user',
+                            },
                         },
                     },
                 },
