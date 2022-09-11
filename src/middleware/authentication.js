@@ -17,6 +17,8 @@ const {
     findByPk,
 } = require('../controllers/user/user.service');
 
+const { secretKey } = require('../config/config');
+
 async function authentication(req, res, next) {
     let decoded;
 
@@ -28,7 +30,7 @@ async function authentication(req, res, next) {
 
     try {
         decoded = jwt.decode(token);
-        jwt.verify(token, process.env.SECRET);
+        jwt.verify(token, secretKey);
     } catch (error) {
         if (error.message === 'jwt expired') {
             return errorResponse(req, res, TOKEN_EXPIRED, 401);

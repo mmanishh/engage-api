@@ -1,5 +1,8 @@
 require('dotenv').config();
 
+const DB_DIALECT = process.env.DB_DIALECT || 'postgres';
+const SECRET_KEY = process.env.SECRET || 'adasxovnklnqklnkjdsankdnw';
+
 module.exports = {
     development: {
         username: process.env.DB_USER,
@@ -7,7 +10,7 @@ module.exports = {
         database: process.env.DB_NAME,
         host: process.env.DB_HOST,
         port: process.env.DB_PORT,
-        dialect: process.env.DB_DIALECT,
+        dialect: DB_DIALECT,
         logging: false,
     },
     test: {
@@ -16,7 +19,7 @@ module.exports = {
         database: 'testing',
         host: process.env.DB_HOST_TEST,
         port: process.env.DB_PORT,
-        dialect: process.env.DB_DIALECT_TEST,
+        dialect: DB_DIALECT,
         logging: false,
     },
     staging: {
@@ -25,7 +28,7 @@ module.exports = {
         database: process.env.DB_NAME_STAGING,
         host: process.env.DB_HOST_STAGING,
         port: process.env.DB_PORT,
-        dialect: process.env.DB_DIALECT_STAGING,
+        dialect: DB_DIALECT,
         logging: false,
     },
     production: {
@@ -34,7 +37,8 @@ module.exports = {
         database: process.env.DB_NAME_PROD,
         host: process.env.DB_HOST_PROD,
         port: process.env.DB_PORT,
-        dialect: process.env.DB_DIALECT_PROD,
+        dialect: DB_DIALECT,
         logging: false,
     },
+    secretKey: SECRET_KEY,
 };
