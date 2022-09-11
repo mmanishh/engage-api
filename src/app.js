@@ -3,7 +3,7 @@ const logger = require('morgan');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
 const { swaggerSpec } = require('./docs/docsSwagger');
 
 const indexRoutes = require('./routes/v1/index');
@@ -25,7 +25,7 @@ const app = express();
 app.use(cors());
 app.options('*', cors());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 app.use(express.json({ limit: '50mb' }));
 app.use(logger('common'));
 
