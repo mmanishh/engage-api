@@ -76,6 +76,12 @@ You can find Swagger REST API Docs:
 http://localhost:7000/api/v1/docs
 ```
 
+Postman Docs
+
+```
+https://documenter.getpostman.com/view/77908/2s7YYoAReF
+```
+
 ## Features Achieved
 
 - Basic JWT Authentication
