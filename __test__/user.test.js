@@ -7,77 +7,47 @@ const {
     describe,
     afterAll,
 } = require('@jest/globals');
+const SequelizeMock = require('sequelize-mock');
 const app = require('../src/app');
 const {
-    NO_TOKEN_PROVIDED, NO_USER_FOUND, DATA_DOES_NOT_EXIST, USER_NOT_EXIST, INVALID_UNAME_PWORD,
+    NO_TOKEN_PROVIDED, NO_USER_FOUND, DATA_DOES_NOT_EXIST, INVALID_UNAME_PWORD, DATA_ALREADY_EXIST,
 } = require('../src/helpers/messages');
-const { userDummy, tokenExpired, tokenInvalid } = require('./data/userData');
+const { userDummy, tokenExpired, tokenInvalid } = require('./data/user');
 const { mockUsersData } = require('./data/mockUserData');
 
 // Mock the overall database layer (connection etc..)
 jest.mock('sequelize', () => require('./_mocks/sequelize'));
+jest.mock('../src/models');
 
-// Mock the User model with some test data and add both model method overrides
-// TODO : refactor in seperate file
-jest.mock('../src/models/user', () => () => {
-    const SequelizeMock = require('sequelize-mock');
-    const crypto = require('crypto');
-
-    const dbMock = new SequelizeMock();
-    const userMockModel = dbMock.define('user');
-
-    const { mockUsersData } = require('./data/mockUserData');
-
-    const userTestObject = userMockModel.build(mockUsersData[0]);
-
-    userTestObject.update = (data) => {
-        userTestObject.isUpdated = true;
-        userTestObject.name = data.name;
-        return Promise.resolve();
-    };
-
-    userTestObject.destroy = () => {
-        userTestObject.isDestroyed = true;
-        return Promise.resolve();
-    };
-
-    const testModelInstances = [
-        userTestObject,
-        userMockModel.build(mockUsersData[1]),
-    ];
-
-    // Mock model method overrides for tests below
-    userMockModel.findAll = () => Promise.resolve(testModelInstances);
-    userMockModel.findOne = ({ where }) => {
-        if (!where) return;
-        const { email } = where;
-        if (!email) return;
-        const user = mockUsersData.find((e) => e.email === email);
-        if (!user) return;
-        return Promise.resolve(userMockModel.build(user));
-    };
-    // userMockModel.findByPk = (query) => () => Promise.resolve(testModelInstances[0]);
-    userMockModel.findByPk = (id) => {
-        const user = mockUsersData.find((e) => e.id === id);
-        if (!user) return;
-        return Promise.resolve(userMockModel.build(user));
-    };
-
-    userMockModel.create = (data) => {
-        testModelInstances.push(data);
-        return Promise.resolve();
-    };
-
-    // Mock test helper methods
-    userMockModel.mockHelperGetLastCreated = () => testModelInstances[testModelInstances.length - 1];
-    userMockModel.mockHelperIsUpdateCalled = () => testModelInstances[0].isUpdated;
-    userMockModel.mockHelperIsDestroyCalled = () => testModelInstances[0].isDestroyed;
-
-    return userMockModel;
-});
+const { User } = require('../src/models');
 
 let authorizationToken;
-const userId = '17ecdb90-dc9b-4b68-b8fb-ca4f7545ebc0';
+const userId = mockUsersData[0].id;
+const dbMock = new SequelizeMock();
+const userMock = dbMock.define('user');
+
+beforeAll(async (done) => {
+    User.findByPk = jest.fn();
+    User.findAll.mockResolvedValue(mockUsersData);
+    User.create.mockResolvedValue(userMock.build(mockUsersData[0]));
+    User.findOne.mockResolvedValue(userMock.build(mockUsersData[0]));
+    User.findByPk = (id) => {
+        const user = mockUsersData.find((e) => e.id === id);
+        if (!user) return;
+        return Promise.resolve(userMock.build(user));
+    };
+    // getting token by logging in
+    try {
+        const res = await request(app)
+            .post('/api/v1/auth/login')
+            .send({ email: 'manish@gmail.com', password: 'hello@123' });
+        // updates authorization token
+        authorizationToken = `Bearer ${res.body.data.token}`;
+        done();
+    } catch (error) {
+        process.exit(1);
+    }
+});
 
 afterAll(async () => {
     jest.clearAllMocks();
@@ -87,17 +57,27 @@ describe('user', () => {
     /* auth endpoints start */
 
     test('register user with correct payload', async () => {
+        User.findOne.mockResolvedValueOnce(null);
+
         const res = await request(app)
             .post('/api/v1/auth/register')
             .send(userDummy);
         expect(res.statusCode).toBe(200);
+        expect(res.body.data).toHaveProperty('id');
+        expect(res.body.data).toHaveProperty('name');
+        expect(res.body.data).toHaveProperty('email');
+        expect(res.body.data).toHaveProperty('status');
+        expect(res.body.data).toHaveProperty('role');
+        expect(res.body.data).toHaveProperty('createdAt');
+        expect(res.body.data).toHaveProperty('updatedAt');
     });
 
     test('throws error when register user with same payload', async () => {
         const res = await request(app)
             .post('/api/v1/auth/register')
-            .send({ email: 'manish@gmail.com', password: 'hello@123' });
+            .send(userDummy);
         expect(res.statusCode).toBe(400);
+        expect(res.body.message).toBe(DATA_ALREADY_EXIST);
     });
 
     test('throws error when registering user with invalid payload', async (done) => {
@@ -105,6 +85,7 @@ describe('user', () => {
             .post('/api/v1/auth/register')
             .send({ ...userDummy, invalid: 'ss' });
         expect(res.statusCode).toBe(400);
+        expect(res.body.message).toBe('"invalid" is not allowed');
         done();
     });
 
@@ -115,10 +96,14 @@ describe('user', () => {
         // updates authorization token
         authorizationToken = `Bearer ${res.body.data.token}`;
         expect(res.statusCode).toBe(200);
+        expect(res.body.data).toHaveProperty('token');
+        expect(res.body.data).toHaveProperty('user');
         done();
     });
 
     test('login user with incorrect payload', async (done) => {
+        User.findOne.mockResolvedValueOnce(null);
+
         const res = await request(app)
             .post('/api/v1/auth/login')
             .send({
@@ -157,7 +142,6 @@ describe('user', () => {
     });
 
     test('throws error when token is expired', async (done) => {
-        // eslint-disable-next-line no-multi-str
         const res = await request(app)
             .get('/api/v1/auth/profile')
             .set('authorization', tokenExpired);
@@ -166,7 +150,6 @@ describe('user', () => {
     });
 
     test('throws error when token is invalid', async (done) => {
-        // eslint-disable-next-line no-multi-str
         const res = await request(app)
             .get('/api/v1/auth/profile')
             .set('authorization', tokenInvalid);
@@ -181,7 +164,7 @@ describe('user', () => {
             .get('/api/v1/users')
             .set('authorization', authorizationToken);
         expect(res.statusCode).toBe(200);
-        expect(res.body.data.length).toBe(3);
+        expect(res.body.data).toEqual(mockUsersData);
         done();
     });
 
@@ -213,17 +196,22 @@ describe('user', () => {
     });
 
     test('update user by id', async (done) => {
+        User.update.mockResolvedValue(mockUsersData[0]);
+
+        const payload = {
+            name: 'Manish New',
+        };
         const res = await request(app)
             .put(`/api/v1/users/${userId}`)
-            .send({
-                name: 'Manish New',
-                email: 'manish@gmail.com',
-                role: 'user',
-                password: 'password@123',
-                status: true,
-            })
+            .send(payload)
             .set('authorization', authorizationToken);
         expect(res.statusCode).toBe(200);
+
+        const updated = JSON.parse(JSON.stringify(mockUsersData[0]));
+        updated.name = payload.name;
+
+        expect(res.body.data).toEqual(updated);
+
         done();
     });
 
@@ -233,6 +221,7 @@ describe('user', () => {
             .set('authorization', authorizationToken);
         expect(res.statusCode).toBe(404);
         expect(res.body.message).toBe(DATA_DOES_NOT_EXIST);
+
         done();
     });
 
@@ -242,6 +231,7 @@ describe('user', () => {
             .set('authorization', authorizationToken);
         expect(res.statusCode).toBe(400);
         expect(res.body.message).toBe('"id" must be a valid GUID');
+
         done();
     });
 });
