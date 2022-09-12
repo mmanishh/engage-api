@@ -14,7 +14,7 @@ const {
     DATA_DOES_NOT_EXIST,
 } = require('../src/helpers/messages');
 const { companyDummy } = require('./data/company');
-const { mockCompaniesData, mockUsersData } = require('./data/mockUserData');
+const { mockCompaniesData, mockUsersData } = require('./data/mockData');
 
 // Mock the overall database layer (connection etc..)
 jest.mock('sequelize', () => require('./_mocks/sequelize'));

@@ -13,7 +13,7 @@ const {
     NO_TOKEN_PROVIDED, NO_USER_FOUND, DATA_DOES_NOT_EXIST, INVALID_UNAME_PWORD, DATA_ALREADY_EXIST,
 } = require('../src/helpers/messages');
 const { userDummy, tokenExpired, tokenInvalid } = require('./data/user');
-const { mockUsersData } = require('./data/mockUserData');
+const { mockUsersData } = require('./data/mockData');
 
 // Mock the overall database layer (connection etc..)
 jest.mock('sequelize', () => require('./_mocks/sequelize'));

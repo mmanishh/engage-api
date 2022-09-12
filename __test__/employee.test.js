@@ -13,7 +13,7 @@ const app = require('../src/app');
 const {
     DATA_DOES_NOT_EXIST,
 } = require('../src/helpers/messages');
-const { mockEmployeesData, mockUsersData } = require('./data/mockUserData');
+const { mockEmployeesData, mockUsersData } = require('./data/mockData');
 const { employeeDummy } = require('./data/employee');
 
 // Mock the overall database layer (connection etc..)
