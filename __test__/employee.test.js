@@ -8,103 +8,55 @@ const {
     afterAll,
     beforeAll,
 } = require('@jest/globals');
+const SequelizeMock = require('sequelize-mock');
 const app = require('../src/app');
 const {
     DATA_DOES_NOT_EXIST,
 } = require('../src/helpers/messages');
-const { mockEmployeesData } = require('./data/mockUserData');
-const { employeeDummy, employeeId } = require('./data/employeeData');
-const { tokenValid } = require('./data/userData');
+const { mockEmployeesData, mockUsersData } = require('./data/mockUserData');
+const { employeeDummy } = require('./data/employee');
 
 // Mock the overall database layer (connection etc..)
 jest.mock('sequelize', () => require('./_mocks/sequelize'));
+jest.mock('../src/models');
 
-// Mock the employee model with some test data and add both model method overrides
-// TODO : refactor in seperate file
-jest.mock('../src/models/employee', () => () => {
-    const SequelizeMock = require('sequelize-mock');
-
-    const dbMock = new SequelizeMock();
-    const employeeMock = dbMock.define('employee');
-
-    const { mockEmployeesData } = require('./data/mockUserData');
-
-    const employeeObject = employeeMock.build(mockEmployeesData[0]);
-
-    employeeObject.update = (data) => {
-        employeeObject.isUpdated = true;
-        employeeObject.name = data.name;
-        return Promise.resolve();
-    };
-
-    employeeObject.destroy = () => {
-        employeeObject.isDestroyed = true;
-        return Promise.resolve();
-    };
-
-    const testModelInstances = [
-        employeeObject,
-        employeeMock.build(mockEmployeesData[1]),
-    ];
-
-    // Mock model method overrides for tests below
-    employeeMock.findAll = () => Promise.resolve(testModelInstances);
-    employeeMock.findOne = ({ where }) => {
-        if (!where) return;
-        const { email } = where;
-        if (!email) return;
-        const employee = mockEmployeesData.find((e) => e.email === email);
-        if (!employee) return;
-        return Promise.resolve(employeeMock.build(employee));
-    };
-
-    employeeMock.findByPk = (id) => {
-        const employee = mockEmployeesData.find((e) => e.id === id);
-        if (!employee) return;
-        return Promise.resolve(employeeMock.build(employee));
-    };
-
-    employeeMock.create = (data) => {
-        testModelInstances.push(data);
-        return Promise.resolve();
-    };
-
-    // Mock test helper methods
-    employeeMock.mockHelperGetLastCreated = () => testModelInstances[testModelInstances.length - 1];
-    employeeMock.mockHelperIsUpdateCalled = () => testModelInstances[0].isUpdated;
-    employeeMock.mockHelperIsDestroyCalled = () => testModelInstances[0].isDestroyed;
-
-    return employeeMock;
-});
-
-// TODO : refactor in seperate file
-jest.mock('../src/models/user', () => () => {
-    const SequelizeMock = require('sequelize-mock');
-
-    const dbMock = new SequelizeMock();
-    const userMockModel = dbMock.define('user');
-
-    const { mockUsersData } = require('./data/mockUserData');
-
-    const userTestObject = userMockModel.build(mockUsersData[0]);
-
-    const testModelInstances = [
-        userTestObject,
-        userMockModel.build(mockUsersData[1]),
-    ];
-
-    // Mock model method overrides for tests below
-    userMockModel.findAll = () => Promise.resolve(testModelInstances);
-    userMockModel.findByPk = (id) => {
-        const user = mockUsersData.find((e) => e.id === id);
-        if (!user) return;
-        return Promise.resolve(userMockModel.build(user));
-    };
-
-    return userMockModel;
-});
+const { Employee, User } = require('../src/models');
 
 const ENDPOINT = '/api/v1/employees';
+const employeeId = mockEmployeesData[0].id;
+let tokenValid;
+
+beforeAll(async (done) => {
+    const dbMock = new SequelizeMock();
+    const userMock = dbMock.define('user');
+
+    User.findByPk = jest.fn();
+    User.findAll.mockResolvedValue(mockUsersData);
+    User.create.mockResolvedValue(userMock.build(mockUsersData[0]));
+    User.findByPk.mockResolvedValue(userMock.build(mockUsersData[0]));
+    User.findOne.mockResolvedValue(userMock.build(mockUsersData[0]));
+
+    const employeeMock = dbMock.define('employee');
+
+    Employee.findByPk = jest.fn();
+    Employee.findAll.mockResolvedValue(mockEmployeesData);
+    Employee.create.mockResolvedValue(employeeMock.build(mockEmployeesData[0]));
+    Employee.findByPk.mockResolvedValue(employeeMock.build(mockEmployeesData[0]));
+    Employee.findOne.mockResolvedValue(userMock.build(mockEmployeesData[0]));
+
+    // getting token by logging in
+    try {
+        User.findOne.mockResolvedValue(userMock.build(mockUsersData[0]));
+        const res = await request(app)
+            .post('/api/v1/auth/login')
+            .send({ email: 'manish@gmail.com', password: 'hello@123' });
+        // updates authorization token
+        tokenValid = `Bearer ${res.body.data.token}`;
+        done();
+    } catch (error) {
+        process.exit(1);
+    }
+});
 
 describe('employee', () => {
     /* employees endpoints  start */
@@ -114,6 +66,7 @@ describe('employee', () => {
             .send(employeeDummy)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(200);
+        expect(res.body.data).toEqual(mockEmployeesData[0]);
     });
 
     test('get all employees', async (done) => {
@@ -121,7 +74,7 @@ describe('employee', () => {
             .get(ENDPOINT)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(200);
-        expect(res.body.data.length).toBe(3);
+        expect(res.body.data).toEqual(mockEmployeesData);
         done();
     });
 
@@ -135,6 +88,8 @@ describe('employee', () => {
     });
 
     test('throws error getting employee which doesnt exist', async (done) => {
+        Employee.findByPk.mockResolvedValueOnce(null);
+
         const res = await request(app)
             .get(`${ENDPOINT}/17ecdb90-dc9b-4b68-b8fb-ca4f7545ebaA`)
             .set('authorization', tokenValid);
@@ -153,20 +108,29 @@ describe('employee', () => {
     });
 
     test('update employee by id', async (done) => {
+        Employee.update.mockResolvedValue(mockEmployeesData[0]);
+        const payload = {
+            email: 'manish@gmail.com',
+            phone: '0556666',
+        };
+
         const res = await request(app)
             .put(`${ENDPOINT}/${employeeId}`)
-            .send({
-                firstName: 'Manish',
-                lastName: 'Shrestha',
-                email: 'mmaharjann@gmail.com',
-                phone: '0894053659',
-            })
+            .send(payload)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(200);
+
+        const updated = mockEmployeesData[0];
+        updated.email = payload.email;
+        updated.phone = payload.phone;
+
+        expect(res.body.data).toEqual(updated);
         done();
     });
 
     test('throws error updating employee which doesnt exist', async (done) => {
+        Employee.findByPk.mockResolvedValueOnce(null);
+
         const res = await request(app)
             .put(`${ENDPOINT}/17ecdb90-dc9b-4b68-b8fb-ca4f7545ebaA`)
             .set('authorization', tokenValid);
