@@ -7,111 +7,68 @@ const {
     describe,
     afterAll,
 } = require('@jest/globals');
+const SequelizeMock = require('sequelize-mock');
 const app = require('../src/app');
+
 const {
     DATA_DOES_NOT_EXIST,
 } = require('../src/helpers/messages');
-const { companyDummy, companyId } = require('./data/companyData');
-const { tokenValid } = require('./data/userData');
-const { mockCompaniesData } = require('./data/mockUserData');
+const { companyDummy } = require('./data/company');
+const { mockCompaniesData, mockUsersData } = require('./data/mockUserData');
+
 // Mock the overall database layer (connection etc..)
 jest.mock('sequelize', () => require('./_mocks/sequelize'));
+jest.mock('../src/models');
 
-// Mock the company model with some test data and add both model method overrides
-// TODO : refactor in seperate file
-jest.mock('../src/models/company', () => () => {
-    const SequelizeMock = require('sequelize-mock');
-
-    const dbMock = new SequelizeMock();
-    const companyMockModel = dbMock.define('company');
-
-    const { mockCompaniesData } = require('./data/mockUserData');
-
-    const companyObject = companyMockModel.build(mockCompaniesData[0]);
-
-    companyObject.update = (data) => {
-        companyObject.isUpdated = true;
-        companyObject.name = data.name;
-        return Promise.resolve();
-    };
-
-    companyObject.destroy = () => {
-        companyObject.isDestroyed = true;
-        return Promise.resolve();
-    };
-
-    const testModelInstances = [
-        companyObject,
-        companyMockModel.build(mockCompaniesData[1]),
-    ];
-
-    // Mock model method overrides for tests below
-    companyMockModel.findAll = () => Promise.resolve(testModelInstances);
-    companyMockModel.findOne = ({ where }) => {
-        if (!where) return;
-        const { email } = where;
-        if (!email) return;
-        const company = mockCompaniesData.find((e) => e.email === email);
-        if (!company) return;
-        return Promise.resolve(companyMockModel.build(company));
-    };
-    // companyMockModel.findByPk = (query) => () => Promise.resolve(testModelInstances[0]);
-    companyMockModel.findByPk = (id) => {
-        const company = mockCompaniesData.find((e) => e.id === id);
-        if (!company) return;
-        return Promise.resolve(companyMockModel.build(company));
-    };
-
-    companyMockModel.create = (data) => {
-        testModelInstances.push(data);
-        return Promise.resolve();
-    };
-
-    // Mock test helper methods
-    companyMockModel.mockHelperGetLastCreated = () => testModelInstances[testModelInstances.length - 1];
-    companyMockModel.mockHelperIsUpdateCalled = () => testModelInstances[0].isUpdated;
-    companyMockModel.mockHelperIsDestroyCalled = () => testModelInstances[0].isDestroyed;
-
-    return companyMockModel;
-});
-
-// TODO : refactor in seperate file
-jest.mock('../src/models/user', () => () => {
-    const SequelizeMock = require('sequelize-mock');
-
-    const dbMock = new SequelizeMock();
-    const userMockModel = dbMock.define('user');
-
-    const { mockUsersData } = require('./data/mockUserData');
-
-    const userTestObject = userMockModel.build(mockUsersData[0]);
-
-    const testModelInstances = [
-        userTestObject,
-        userMockModel.build(mockUsersData[1]),
-    ];
-
-    // Mock model method overrides for tests below
-    userMockModel.findAll = () => Promise.resolve(testModelInstances);
-    userMockModel.findByPk = (id) => {
-        const user = mockUsersData.find((e) => e.id === id);
-        if (!user) return;
-        return Promise.resolve(userMockModel.build(user));
-    };
-
-    return userMockModel;
-});
+const { Company, User } = require('../src/models');
 
 const ENDPOINT = '/api/v1/companies';
+const companyId = mockCompaniesData[0].id;
+let tokenValid;
+
+beforeAll(async (done) => {
+    const dbMock = new SequelizeMock();
+    const userMock = dbMock.define('user');
+
+    User.findByPk = jest.fn();
+    User.findAll.mockResolvedValue(mockUsersData);
+    User.create.mockResolvedValue(userMock.build(mockUsersData[0]));
+    User.findByPk.mockResolvedValue(userMock.build(mockUsersData[0]));
+    User.findOne.mockResolvedValue(userMock.build(mockUsersData[0]));
+
+    const employeeMock = dbMock.define('employee');
+
+    Company.findByPk = jest.fn();
+    Company.findAll.mockResolvedValue(mockCompaniesData);
+    Company.create.mockResolvedValue(employeeMock.build(mockCompaniesData[0]));
+    Company.findByPk.mockResolvedValue(employeeMock.build(mockCompaniesData[0]));
+    Company.findOne.mockResolvedValue(userMock.build(mockCompaniesData[0]));
+
+    // getting token by logging in
+    try {
+        User.findOne.mockResolvedValue(userMock.build(mockUsersData[0]));
+        const res = await request(app)
+            .post('/api/v1/auth/login')
+            .send({ email: 'manish@gmail.com', password: 'hello@123' });
+        // updates authorization token
+        tokenValid = `Bearer ${res.body.data.token}`;
+        done();
+    } catch (error) {
+        process.exit(1);
+    }
+});
 
 describe('company', () => {
     /* companies endpoints  start */
-    test('create company with correct payload', async () => {
+
+    test('create company with correct payload', async (done) => {
         const res = await request(app)
             .post(ENDPOINT)
             .send(companyDummy)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(200);
+        expect(res.body.data).toEqual(mockCompaniesData[0]);
+        done();
     });
 
     test('get all companies', async (done) => {
@@ -119,7 +76,7 @@ describe('company', () => {
             .get(ENDPOINT)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(200);
-        expect(res.body.data.length).toBe(3);
+        expect(res.body.data).toEqual(mockCompaniesData);
         done();
     });
 
@@ -133,6 +90,8 @@ describe('company', () => {
     });
 
     test('throws error getting company which doesnt exist', async (done) => {
+        Company.findByPk.mockResolvedValueOnce(null);
+
         const res = await request(app)
             .get(`${ENDPOINT}/17ecdb90-dc9b-4b68-b8fb-ca4f7545ebaA`)
             .set('authorization', tokenValid);
@@ -151,20 +110,27 @@ describe('company', () => {
     });
 
     test('update company by id', async (done) => {
+        Company.update.mockResolvedValue(mockCompaniesData[0]);
+        const payload = {
+            name: 'Facebook',
+            phone: '089453655',
+            website: 'http://www.imar.ie',
+        };
+
         const res = await request(app)
             .put(`${ENDPOINT}/${companyId}`)
-            .send({
-                name: 'Facebook',
-                email: 'hello@gmail.com',
-                phone: '089453655',
-                website: 'http://www.imar.ie',
-            })
+            .send(payload)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(200);
+        const updated = mockCompaniesData[0];
+        updated.name = payload.name;
+        expect(res.body.data).toEqual(updated);
         done();
     });
 
     test('throws error updating company which doesnt exist', async (done) => {
+        Company.findByPk.mockResolvedValueOnce(null);
+
         const res = await request(app)
             .put(`${ENDPOINT}/17ecdb90-dc9b-4b68-b8fb-ca4f7545ebaA`)
             .set('authorization', tokenValid);
