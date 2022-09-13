@@ -147,6 +147,54 @@ describe('employee', () => {
         expect(res.body.message).toBe('"id" must be a valid GUID');
         done();
     });
+
+    test('throws error when creating employee', async (done) => {
+        Employee.create.mockRejectedValueOnce(new Error());
+
+        const res = await request(app)
+            .post(`${ENDPOINT}`)
+            .send(employeeDummy)
+            .set('authorization', tokenValid);
+        expect(res.statusCode).toBe(500);
+        done();
+    });
+
+    test('throws error when getting all', async (done) => {
+        Employee.findAll.mockRejectedValueOnce(new Error());
+
+        const res = await request(app)
+            .get(`${ENDPOINT}`)
+            .set('authorization', tokenValid);
+        expect(res.statusCode).toBe(500);
+        done();
+    });
+
+    test('throws error when geting employee by id', async (done) => {
+        Employee.findByPk.mockRejectedValueOnce(new Error());
+
+        const res = await request(app)
+            .get(`${ENDPOINT}/${employeeId}`)
+            .set('authorization', tokenValid);
+        expect(res.statusCode).toBe(500);
+        done();
+    });
+
+    test('throws error when updating employee by id', async (done) => {
+        Employee.update.mockRejectedValueOnce(new Error());
+        Employee.findByPk.mockRejectedValueOnce(new Error());
+
+        const payload = {
+            email: 'manish@gmail.com',
+            phone: '0556666',
+        };
+
+        const res = await request(app)
+            .put(`${ENDPOINT}/${employeeId}`)
+            .send(payload)
+            .set('authorization', tokenValid);
+        expect(res.statusCode).toBe(500);
+        done();
+    });
 });
 
 afterAll(async () => {

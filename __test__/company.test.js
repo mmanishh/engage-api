@@ -11,7 +11,7 @@ const SequelizeMock = require('sequelize-mock');
 const app = require('../src/app');
 
 const {
-    DATA_DOES_NOT_EXIST,
+    DATA_DOES_NOT_EXIST, SOMETHING_WENT_WRONG,
 } = require('../src/helpers/messages');
 const { companyDummy } = require('./data/company');
 const { mockCompaniesData, mockUsersData } = require('./data/mockData');
@@ -145,6 +145,49 @@ describe('company', () => {
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(400);
         expect(res.body.message).toBe('"id" must be a valid GUID');
+        done();
+    });
+
+    test('throws error when creating company', async (done) => {
+        Company.create.mockRejectedValueOnce(new Error());
+
+        const res = await request(app)
+            .post(`${ENDPOINT}`)
+            .send(companyDummy)
+            .set('authorization', tokenValid);
+        expect(res.statusCode).toBe(500);
+        done();
+    });
+
+    test('throws error when getting all', async (done) => {
+        Company.findAll.mockRejectedValueOnce(new Error());
+
+        const res = await request(app)
+            .get(`${ENDPOINT}`)
+            .set('authorization', tokenValid);
+        expect(res.statusCode).toBe(500);
+        done();
+    });
+
+    test('throws error when geting company by id', async (done) => {
+        Company.findByPk.mockRejectedValueOnce(new Error());
+
+        const res = await request(app)
+            .get(`${ENDPOINT}/${companyId}`)
+            .set('authorization', tokenValid);
+        expect(res.statusCode).toBe(500);
+        done();
+    });
+
+    test('throws error when updating company by id', async (done) => {
+        Company.update.mockRejectedValueOnce(new Error());
+        Company.findByPk.mockRejectedValueOnce(new Error());
+
+        const res = await request(app)
+            .put(`${ENDPOINT}/${companyId}`)
+            .send(companyDummy)
+            .set('authorization', tokenValid);
+        expect(res.statusCode).toBe(500);
         done();
     });
 });

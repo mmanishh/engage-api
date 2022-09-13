@@ -25,17 +25,17 @@ let authorizationToken;
 const userId = mockUsersData[0].id;
 const dbMock = new SequelizeMock();
 const userMock = dbMock.define('user');
+const ENDPOINT = '/api/v1/users';
 
 beforeAll(async (done) => {
-    User.findByPk = jest.fn();
-    User.findAll.mockResolvedValue(mockUsersData);
-    User.create.mockResolvedValue(userMock.build(mockUsersData[0]));
-    User.findOne.mockResolvedValue(userMock.build(mockUsersData[0]));
-    User.findByPk = (id) => {
+    User.findByPk = jest.fn().mockImplementation((id) => {
         const user = mockUsersData.find((e) => e.id === id);
         if (!user) return;
         return Promise.resolve(userMock.build(user));
-    };
+    });
+    User.findAll.mockResolvedValue(mockUsersData);
+    User.create.mockResolvedValue(userMock.build(mockUsersData[0]));
+    User.findOne.mockResolvedValue(userMock.build(mockUsersData[0]));
     // getting token by logging in
     try {
         const res = await request(app)
@@ -232,6 +232,40 @@ describe('user', () => {
         expect(res.statusCode).toBe(400);
         expect(res.body.message).toBe('"id" must be a valid GUID');
 
+        done();
+    });
+
+    test('throws error register user', async (done) => {
+        User.create.mockRejectedValueOnce(new Error());
+        User.findOne.mockRejectedValueOnce(new Error());
+
+        const payload = JSON.parse(JSON.stringify(userDummy));
+        payload.email = 'newuser@gmail.com';
+
+        const res = await request(app)
+            .post('/api/v1/auth/register')
+            .send(payload);
+        expect(res.statusCode).toBe(500);
+        done();
+    });
+
+    test('throws error when login', async (done) => {
+        User.findOne.mockRejectedValueOnce(new Error());
+
+        const res = await request(app)
+            .post('/api/v1/auth/login')
+            .send({ email: 'manish@gmail.com', password: 'hello@123' });
+        expect(res.statusCode).toBe(500);
+        done();
+    });
+
+    test('throws error when getting all', async (done) => {
+        User.findAll.mockRejectedValueOnce(new Error());
+
+        const res = await request(app)
+            .get(`${ENDPOINT}`)
+            .set('authorization', authorizationToken);
+        expect(res.statusCode).toBe(500);
         done();
     });
 });
