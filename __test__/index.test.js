@@ -3,10 +3,8 @@ const {
     expect,
     describe,
     test,
-    afterAll,
 } = require('@jest/globals');
 
-const conn = require('../src/config/sequelizeConnect');
 const app = require('../src/app');
 
 describe('index', () => {
@@ -30,14 +28,4 @@ describe('index', () => {
         expect(res.statusCode).toBe(500);
         done();
     });
-});
-
-afterAll(async (done) => {
-    try {
-        await conn.dbDisconnect();
-        done();
-    } catch (error) {
-        console.error(error);
-        process.exit(1);
-    }
 });
