@@ -25,11 +25,11 @@ exports.findById = async (req, res) => {
     try {
         const param = { ...req.body, ...req.params, ...req.query };
 
-        const user = await companyService.findByPk(param.id);
+        const model = await companyService.findByPk(param.id);
 
-        if (!user) return errorResponse(req, res, DATA_DOES_NOT_EXIST, 404);
+        if (!model) return errorResponse(req, res, DATA_DOES_NOT_EXIST, 404);
 
-        return successResponse(req, res, user);
+        return successResponse(req, res, model);
     } catch (error) {
         return errorResponse(req, res, error.message);
     }
@@ -39,11 +39,11 @@ exports.update = async (req, res) => {
     try {
         const param = { ...req.body, ...req.params, ...req.query };
 
-        const user = await companyService.findByPk(param.id);
+        const model = await companyService.findByPk(param.id);
 
-        if (!user) return errorResponse(req, res, DATA_DOES_NOT_EXIST, 404);
+        if (!model) return errorResponse(req, res, DATA_DOES_NOT_EXIST, 404);
 
-        const updated = await user.update({ ...req.body });
+        const updated = await companyService.update(model, { ...req.body });
 
         return successResponse(req, res, updated);
     } catch (error) {

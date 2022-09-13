@@ -16,3 +16,5 @@ exports.findOne = async (query) => await User.findOne({ where: query });
 exports.findByPk = async (id) => await User.findByPk(id);
 
 exports.findAll = async () => await User.findAll();
+
+exports.update = async (model, payload) => await model.update(payload);

@@ -52,7 +52,7 @@ exports.update = async (req, res) => {
 
         if (!employee) return errorResponse(req, res, DATA_DOES_NOT_EXIST, 404);
 
-        const updated = await employee.update({ ...req.body });
+        const updated = await employeeService.update(employee, { ...req.body });
 
         return successResponse(req, res, updated);
     } catch (error) {

@@ -78,7 +78,7 @@ exports.update = async (req, res) => {
 
         if (!user) return errorResponse(req, res, DATA_DOES_NOT_EXIST, 404);
 
-        const updated = await user.update({ ...req.body });
+        const updated = await userService.update(user, { ...req.body });
 
         return successResponse(req, res, updated);
     } catch (error) {

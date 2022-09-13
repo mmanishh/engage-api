@@ -8,3 +8,5 @@ exports.findOne = async (query) => await Company.findOne({ where: query });
 exports.findByPk = async (id) => await Company.findByPk(id);
 
 exports.findAll = async () => await Company.findAll();
+
+exports.update = async (model, payload) => await model.update(payload);
