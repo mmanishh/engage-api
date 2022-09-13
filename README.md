@@ -1,5 +1,8 @@
 # Engage REST API
 
+![Tests](https://github.com/mmanishh/engage-api/workflows/Node.js%20CI/badge.svg?branch=master)
+
+
 ## Clone Repo
 
 clone this repo with `https` / `ssh` / `github cli`
@@ -88,7 +91,7 @@ https://documenter.getpostman.com/view/77908/2s7YYoAReF
 - Register and Login user
 - CRU API for Employees, Companies and User
 - Use of DB transactions when creating employee along with company payload
-- Integration tests for all APIS with test coverage upto 92.87 using sequelize-mock. I would like to mock each unit service and controller using jest mock if i had more time.
+- Integration tests for all APIS with test coverage upto 96.92 using sequelize-mock. I would like to mock each unit service and controller using jest mock if i had more time.
 - Two type of test implemented
     - Hitting actual DB which is ``user.e2e.js`` . This will create test db and call apis and run tests
     - Mocking DB using sequelize-mock 
