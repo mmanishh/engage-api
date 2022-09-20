@@ -9,6 +9,6 @@ const { update, getById, create } = require('../../controllers/employee/employee
 router.get('/', employeeController.getAll);
 router.post('/', validator(create), employeeController.create);
 router.get('/:id', validator(getById), employeeController.findById);
-router.put('/:id', validator(update), employeeController.update);
+router.patch('/:id', validator(update), employeeController.update);
 
 module.exports = router;

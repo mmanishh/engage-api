@@ -118,7 +118,7 @@ describe('company', () => {
         };
 
         const res = await request(app)
-            .put(`${ENDPOINT}/${companyId}`)
+            .patch(`${ENDPOINT}/${companyId}`)
             .send(payload)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(200);
@@ -132,7 +132,7 @@ describe('company', () => {
         Company.findByPk.mockResolvedValueOnce(null);
 
         const res = await request(app)
-            .put(`${ENDPOINT}/17ecdb90-dc9b-4b68-b8fb-ca4f7545ebaA`)
+            .patch(`${ENDPOINT}/17ecdb90-dc9b-4b68-b8fb-ca4f7545ebaA`)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(404);
         expect(res.body.message).toBe(DATA_DOES_NOT_EXIST);
@@ -141,7 +141,7 @@ describe('company', () => {
 
     test('throws error updating company with incorrect uuid', async (done) => {
         const res = await request(app)
-            .put(`${ENDPOINT}/1234`)
+            .patch(`${ENDPOINT}/1234`)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(400);
         expect(res.body.message).toBe('"id" must be a valid GUID');
@@ -184,7 +184,7 @@ describe('company', () => {
         Company.findByPk.mockRejectedValueOnce(new Error());
 
         const res = await request(app)
-            .put(`${ENDPOINT}/${companyId}`)
+            .patch(`${ENDPOINT}/${companyId}`)
             .send(companyDummy)
             .set('authorization', tokenValid);
         expect(res.statusCode).toBe(500);

@@ -9,6 +9,6 @@ const { update, getById, create } = require('../../controllers/company/company.s
 router.get('/', companyController.getAll);
 router.post('/', validator(create), companyController.create);
 router.get('/:id', validator(getById), companyController.findById);
-router.put('/:id', validator(update), companyController.update);
+router.patch('/:id', validator(update), companyController.update);
 
 module.exports = router;

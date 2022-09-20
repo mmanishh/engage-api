@@ -8,6 +8,6 @@ const { update, getById } = require('../../controllers/user/user.schema');
 
 router.get('/', userController.getAll);
 router.get('/:id', validator(getById), userController.findById);
-router.put('/:id', validator(update), userController.update);
+router.patch('/:id', validator(update), userController.update);
 
 module.exports = router;

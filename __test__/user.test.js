@@ -202,7 +202,7 @@ describe('user', () => {
             name: 'Manish New',
         };
         const res = await request(app)
-            .put(`/api/v1/users/${userId}`)
+            .patch(`/api/v1/users/${userId}`)
             .send(payload)
             .set('authorization', authorizationToken);
         expect(res.statusCode).toBe(200);
@@ -217,7 +217,7 @@ describe('user', () => {
 
     test('throws error updating user which doesnt exist', async (done) => {
         const res = await request(app)
-            .put('/api/v1/users/17ecdb90-dc9b-4b68-b8fb-ca4f7545ebaA')
+            .patch('/api/v1/users/17ecdb90-dc9b-4b68-b8fb-ca4f7545ebaA')
             .set('authorization', authorizationToken);
         expect(res.statusCode).toBe(404);
         expect(res.body.message).toBe(DATA_DOES_NOT_EXIST);
@@ -227,7 +227,7 @@ describe('user', () => {
 
     test('throws error updating user with incorrect uuid', async (done) => {
         const res = await request(app)
-            .put('/api/v1/users/1234')
+            .patch('/api/v1/users/1234')
             .set('authorization', authorizationToken);
         expect(res.statusCode).toBe(400);
         expect(res.body.message).toBe('"id" must be a valid GUID');
