@@ -15,7 +15,7 @@ const {
 
 const {
     findByPk,
-} = require('../controllers/user/user.service');
+} = require('../controllers/user/role.service');
 
 const { secretKey } = require('../config/config');
 
