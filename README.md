@@ -1,7 +1,7 @@
 # Engage REST API
 
 ![Tests](https://github.com/mmanishh/engage-api/workflows/Node.js%20CI/badge.svg?branch=master)
-
+[![CodeFactor](https://www.codefactor.io/repository/github/mmanishh/engage-api/badge)](https://www.codefactor.io/repository/github/mmanishh/engage-api)
 
 ## Clone Repo
 
